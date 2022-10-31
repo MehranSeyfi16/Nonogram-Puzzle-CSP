@@ -56,58 +56,69 @@ public class Nonogram {
     }
 
     public void updateDomain(State state){ 
+        updateDomainFullRowCheck(state);
+        updateDomainFullColumnCheck(state);
+    }
+
+    public void updateDomainFullRowCheck(State state){
         ArrayList<ArrayList<String>> board = state.getBoard();
         ArrayList<Integer> constraints = new ArrayList<>();
         ArrayList<Integer> goodRows = new ArrayList<>();
         int count = 0;
         for (int i = 0; i < n; i++) { //row constraints
             for (int j = 0; j < n; j++) {
-                if (board.get(i).get(j).equals("F"))
+                if (board.get(i).get(j).equals("F")) {
                     count++;
-                if (board.get(i).get(j).equals("E"))
-                {
+                }
+                if (board.get(i).get(j+1).equals("E")) {
                     constraints.add(count);
                     count = 0;
                 }
             }
-            if (constraints.equals(row_constraints.get(i)))
+            if (constraints.equals(row_constraints.get(i))) {
                 goodRows.add(i);
-            constraints.clear();
+            }
         }
 
         for (int i = 0; i < goodRows.size(); i++) {
             for (int j = 0; j < n; j++) {
-                if (board.get(goodRows.get(i)).get(j).equals("E"))
+                if (board.get(goodRows.get(i)).get(j).equals("E")) {
                     board.get(goodRows.get(i)).set(j, "X");
+                }
             }
         }
+    }
 
-
-
+    public void updateDomainFullColumnCheck(State state){
+        ArrayList<ArrayList<String>> board = state.getBoard();
+        ArrayList<Integer> constraints = new ArrayList<>();
         ArrayList<Integer> goodColumns = new ArrayList<>();
-        count = 0;
+        int count = 0;
         for (int i = 0; i < n; i++) { //column constraints
             for (int j = 0; j < n; j++) {
-                if (board.get(j).get(i).equals("F"))
+                if (board.get(j).get(i).equals("F")) {
                     count++;
-                if (board.get(j).get(i).equals("E"))
-                {
+                }
+                if (board.get(j+1).get(i).equals("E")) {
                     constraints.add(count);
                     count = 0;
                 }
             }
-            if (constraints.equals(col_constraints.get(i)))
+            if (constraints.equals(col_constraints.get(i))) {
                 goodColumns.add(i);
-            constraints.clear();
+            }
         }
 
         for (int i = 0; i < goodColumns.size(); i++) {
             for (int j = 0; j < n; j++) {
-                if (board.get(i).get(goodColumns.get(j)).equals("E"))
+                if (board.get(i).get(goodColumns.get(j)).equals("E")) {
                     board.get(goodColumns.get(j)).set(j, "X");
+                }
             }
         }
     }
+
+
 
     private ArrayList<String> LCV (State state, int[] var) {
         ArrayList<ArrayList<String>> cBoard = state.getBoard();
