@@ -12,7 +12,7 @@ public class Main {
     private static ArrayList<ArrayList<ArrayList<String>>> domain;
 
     public static void main(String[] args) {
-        File file = new File("E:\\UniversityFiles\\AI\\project\\newerNonogram\\inputs\\input4.txt");
+        File file = new File("E:\\UniversityFiles\\AI\\project\\newerNonogram\\inputs\\input1.txt");
         Scanner scanner;
 
         try {
@@ -52,8 +52,8 @@ public class Main {
                 for (int j = 0; j < n; j++) {
                     board.get(i).add("E");
                     domain.get(i).add(new ArrayList<>(Arrays.asList(
-                        "F",
-                        "X"
+                            "F",
+                            "X"
                     )));
                 }
             }
@@ -66,7 +66,7 @@ public class Main {
         State state = new State(board, domain);
         Nonogram nonogram = new Nonogram(state, row_constraints, col_constraints);
         nonogram.start();
-        
+
     }
 }
 

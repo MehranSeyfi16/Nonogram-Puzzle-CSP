@@ -40,6 +40,7 @@ public class Nonogram {
             State newState = state.copy();
             newState.setIndexBoard(mrvRes[0], mrvRes[1], s);
             newState.removeIndexDomain(mrvRes[0], mrvRes[1], s);
+            //newState.removeIndexDomain(mrvRes[0], mrvRes[1], s);
             if (!isConsistent(newState)) {
                 continue;
             }
@@ -86,7 +87,7 @@ public class Nonogram {
         updateDomainFullRowCheck(state);
         updateDomainFullColumnCheck(state);
         updateSingleValueRowPositions(state);
-//        updateSingleValueColumnPositions(state);
+        updateSingleValueColumnPositions(state);
     }
 
     public void updateDomainFullRowCheck(State state) {
@@ -104,6 +105,8 @@ public class Nonogram {
                     count = 0;
                 }
 
+            if (count != 0)
+                constraints.add(count);
             if (constraints.equals(row_constraints.get(i)))
                 goodRows.add(i);
             constraints.clear();
@@ -112,9 +115,9 @@ public class Nonogram {
         for (Integer goodRow : goodRows)
             for (int j = 0; j < n; j++)
                 if (board.get(goodRow).get(j).equals("E")) {
-                    board.get(goodRow).set(j, "X");
                     state.setIndexBoard(goodRow, j, "X");
                     state.removeIndexDomain(goodRow, j, "X");
+                    state.removeIndexDomain(goodRow, j, "F");
                 }
     }
 
@@ -125,13 +128,16 @@ public class Nonogram {
         int count = 0;
         for (int i = 0; i < n; i++) { //column constraints
             for (int j = 0; j < n; j++) {
-                if (board.get(i).get(j).equals("F"))
+                if (board.get(j).get(i).equals("F"))
                     count++;
                 else if (count != 0) {
                     constraints.add(count);
                     count = 0;
                 }
             }
+
+            if (count != 0)
+                constraints.add(count);
             if (constraints.equals(col_constraints.get(i))) {
                 goodColumns.add(i);
             }
@@ -140,9 +146,10 @@ public class Nonogram {
 
         for (Integer goodColumn : goodColumns)
             for (int i = 0; i < n; i++)
-                if (board.get(goodColumn).get(i).equals("E")) {
+                if (board.get(i).get(goodColumn).equals("E")) {
                     state.setIndexBoard(i, goodColumn, "X");
                     state.removeIndexDomain(i, goodColumn, "X");
+                    state.removeIndexDomain(i, goodColumn, "F");
                 }
     }
 
@@ -181,7 +188,6 @@ public class Nonogram {
             if (col_constraints.get(i).size() == 1){
                 int count = 0;
                 if (board.get(0).get(i).equals("F")){
-                    System.out.println(col_constraints.get(i));
                     for (int j=0; count!=Integer.parseInt(col_constraints.get(i).get(0).toString())-1; j++){
                         state.setIndexBoard(j, i, "F");
                         state.removeIndexDomain(j, i, "F");
@@ -207,27 +213,35 @@ public class Nonogram {
 
     private ArrayList<String> LCV (State state, int[] var) {
         ArrayList<String> strings = new ArrayList<>();
+        ArrayList<ArrayList<ArrayList<String>>> cDomain;
         strings.add("F");
         strings.add("X");
+
         State newState = state.copy();
         newState.setIndexBoard(var[0], var[1], "F");
         newState.removeIndexDomain(var[0], var[1], "F");
+        newState.removeIndexDomain(var[0], var[1], "X");
         updateDomain(newState);
-        ArrayList<ArrayList<ArrayList<String>>> cDomain = newState.getDomain();
+        cDomain = newState.getDomain();
         int sum = 0;
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
                 sum += cDomain.get(i).get(j).size();
+
         newState = state.copy();
         newState.setIndexBoard(var[0], var[1], "X");
         newState.removeIndexDomain(var[0], var[1], "X");
+        newState.removeIndexDomain(var[0], var[1], "F");
         updateDomain(newState);
         cDomain = newState.getDomain();
         int sum_2 = 0;
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
                 sum_2 += cDomain.get(i).get(j).size();
-        if (sum > sum_2)
+
+        if (sum < sum_2)
+            strings.remove(0);
+        else if (sum_2 < sum)
             strings.remove(1);
 
         return strings;
