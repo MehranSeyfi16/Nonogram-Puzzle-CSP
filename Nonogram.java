@@ -234,7 +234,7 @@ public class Nonogram {
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
                 sum += cDomain.get(i).get(j).size();
-
+        newState = state.copy();
         newState.setIndexBoard(var[0], var[1], "X");
         newState.removeIndexDomain(var[0], var[1], "X");
         updateDomain(newState);
