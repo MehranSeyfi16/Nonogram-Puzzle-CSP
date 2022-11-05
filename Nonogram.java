@@ -9,9 +9,9 @@ public class Nonogram {
     ArrayList<ArrayList<Integer>> row_constraints;
     ArrayList<ArrayList<Integer>> col_constraints;
 
-    public Nonogram(State state,
-                    ArrayList<ArrayList<Integer>> row_constraints,
-                    ArrayList<ArrayList<Integer>> col_constraints) {
+    public Nonogram(State state, 
+        ArrayList<ArrayList<Integer>> row_constraints, 
+        ArrayList<ArrayList<Integer>> col_constraints) {
         this.state = state;
         this.n = state.getN();
         this.row_constraints = row_constraints;
@@ -29,7 +29,6 @@ public class Nonogram {
     private boolean backtrack(State state) {
 
         if (isFinished(state)) {
-
             System.out.println("Result Board: \n");
             state.printBoard();
             return true;
@@ -55,21 +54,56 @@ public class Nonogram {
         return false;
     }
 
-    public void forwardChecking (State state) {
-        ArrayList<ArrayList<String>> board = state.getBoard();
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (board.get(i).get(j).equals("E")) {
-                    board.get(i).set(j, "F");
-                    updateDomain(this.state);
-                    if (state.getDomain().isEmpty())
-                        backtrack(this.state);
+    public boolean forwardCheck(State state){
+
+//        public void forwardChecking (State state) {
+//            ArrayList<ArrayList<String>> board = state.getBoard();
+//            for (int i = 0; i < n; i++) {
+//                for (int j = 0; j < n; j++) {
+//                    if (board.get(i).get(j).equals("E")) {
+//                        board.get(i).set(j, "F");
+//                        updateDomain(this.state);
+//                        if (state.getDomain().isEmpty())
+//                            backtrack(this.state);
+//                    }
+//                }
+//            }
+//        }
+
+        if (isFinished(state)) {
+            System.out.println("Result Board: \n");
+            state.printBoard();
+            return true;
+        }
+        if (allAssigned(state)) {
+            return false;
+        }
+
+        int[] mrvRes = MRV(state);
+        ArrayList<String> lcv = LCV(state, mrvRes);
+        for (String s : lcv) {
+            State newState = state.copy();
+            ArrayList<ArrayList<ArrayList<String>>> domain = newState.getDomain();
+            for (int i = 0; i < n ; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (domain.get(i).get(j).equals(lcv)){
+                        newState.setIndexBoard(mrvRes[0], mrvRes[1], s);
+                        newState.removeIndexDomain(mrvRes[0], mrvRes[1], s);
+                    }
                 }
             }
+            if (!isConsistent(newState) && newState.getDomain().isEmpty()) {
+                continue;
+            }
+
+            if (forwardCheck(newState)) {
+                return true;
+            }
         }
+        return false;
     }
 
-    public void updateDomain(State state){
+    public void updateDomain(State state){ 
         updateDomainFullRowCheck(state);
         updateDomainFullColumnCheck(state);
         updateSingleValueRowPositions(state);
@@ -194,7 +228,7 @@ public class Nonogram {
 
 
         return state.getDomain().get(var[0]).get(var[1]);
-    }
+    } 
 
     private int[] MRV (State state) {
         ArrayList<ArrayList<String>> cBoard = state.getBoard();
@@ -231,9 +265,9 @@ public class Nonogram {
         return true;
     }
 
-
+    
     private boolean isConsistent(State state) {
-
+        
         ArrayList<ArrayList<String>> cBoard = state.getBoard();
         //check row constraints
         for (int i = 0; i < n; i++) {
@@ -260,7 +294,7 @@ public class Nonogram {
             if (count_f != sum && count_e == 0) {
                 return false;
             }
-
+            
             Queue<Integer> constraints = new LinkedList<>();
             constraints.addAll(row_constraints.get(i));
             int count = 0;
@@ -310,7 +344,7 @@ public class Nonogram {
             if (count_f != sum && count_e == 0) {
                 return false;
             }
-
+            
             Queue<Integer> constraints = new LinkedList<>();
             constraints.addAll(col_constraints.get(j));
             int count = 0;
