@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Queue;
 import java.util.LinkedList;
 
@@ -20,9 +21,13 @@ public class Nonogram {
     public void start() {
         long tStart = System.nanoTime();
         backtrack(state);
-        //forwardCheck(state);
         long tEnd = System.nanoTime();
-        System.out.println("Total time: " + (tEnd - tStart)/1000000000.000000000);
+        System.out.println("Back Track -- Total time: " + (tEnd - tStart)/1000000000.000000000);
+
+        /*long tStart = System.nanoTime();
+        forwardCheck(state);
+        long tEnd = System.nanoTime();
+        System.out.println("Forward Check -- Total time: " + (tEnd - tStart)/1000000000.000000000);*/
     }
 
     private boolean backtrack(State state) {
@@ -40,7 +45,6 @@ public class Nonogram {
             State newState = state.copy();
             newState.setIndexBoard(mrvRes[0], mrvRes[1], s);
             newState.removeIndexDomain(mrvRes[0], mrvRes[1], s);
-            //newState.removeIndexDomain(mrvRes[0], mrvRes[1], s);
             if (!isConsistent(newState)) {
                 continue;
             }
@@ -86,8 +90,8 @@ public class Nonogram {
     public void updateDomain(State state) {
         updateDomainFullRowCheck(state);
         updateDomainFullColumnCheck(state);
-        updateSingleValueRowPositions(state);
-        updateSingleValueColumnPositions(state);
+        //updateSingleValueRowPositions(state);
+        //updateSingleValueColumnPositions(state);
     }
 
     public void updateDomainFullRowCheck(State state) {
@@ -214,9 +218,8 @@ public class Nonogram {
     private ArrayList<String> LCV (State state, int[] var) {
         ArrayList<String> strings = new ArrayList<>();
         ArrayList<ArrayList<ArrayList<String>>> cDomain;
-        strings.add("F");
         strings.add("X");
-
+        strings.add("F");
         State newState = state.copy();
         newState.setIndexBoard(var[0], var[1], "F");
         newState.removeIndexDomain(var[0], var[1], "F");
@@ -226,7 +229,11 @@ public class Nonogram {
         int sum = 0;
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
-                sum += cDomain.get(i).get(j).size();
+                if (cDomain.get(i).get(j).size() == 0)
+                    sum += 10;                                              // could be better
+                else if (cDomain.get(i).get(j).size() == 1)                 // sum += cDomain.get(i).get(j).size()
+                    sum++;
+
 
         newState = state.copy();
         newState.setIndexBoard(var[0], var[1], "X");
@@ -237,13 +244,14 @@ public class Nonogram {
         int sum_2 = 0;
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
-                sum_2 += cDomain.get(i).get(j).size();
+                if (cDomain.get(i).get(j).size() == 0)              // could be better
+                    sum_2 += 10;                                    // sum_2 += cDomain.get(i).get(j).size()
+                else if (cDomain.get(i).get(j).size() == 1)
+                    sum_2++;
 
         if (sum < sum_2)
-            strings.remove(0);
-        else if (sum_2 < sum)
-            strings.remove(1);
-
+            Collections.sort(strings);
+        //
         return strings;
     }
 
@@ -312,21 +320,27 @@ public class Nonogram {
             Queue<Integer> constraints = new LinkedList<>(row_constraints.get(i));
             int count = 0;
             boolean flag = false;
+            label1:
             for (int j = 0; j < n; j++) {
-                if (cBoard.get(i).get(j).equals("F")) {
-                    flag = true;
-                    count++;
-                } else if (cBoard.get(i).get(j).equals("X")) {
-                    if (flag) {
-                        flag = false;
-                        if (!constraints.isEmpty()){
-                            if (count != constraints.peek()) {
-                                return false;
+                switch (cBoard.get(i).get(j)) {
+                    case "F":
+                        flag = true;
+                        count++;
+                        break;
+                    case "E":
+                        break label1;
+                    case "X":
+                        if (flag) {
+                            flag = false;
+                            if (!constraints.isEmpty()) {
+                                if (count != constraints.peek()) {
+                                    return false;
+                                }
+                                constraints.remove();
                             }
-                            constraints.remove();
+                            count = 0;
                         }
-                        count = 0;
-                    }
+                        break;
                 }
             }
 
@@ -349,7 +363,7 @@ public class Nonogram {
                     case "X" -> count_x++;
                 }
             }
-            if (count_x > n -sum) {
+            if (count_x > n - sum) {
                 return false;
             }
             if (count_f != sum && count_e == 0) {
@@ -359,21 +373,27 @@ public class Nonogram {
             Queue<Integer> constraints = new LinkedList<>(col_constraints.get(j));
             int count = 0;
             boolean flag = false;
+            label:
             for (int i = 0; i < n; i++) {
-                if (cBoard.get(i).get(j).equals("F")) {
-                    flag = true;
-                    count++;
-                } else if (cBoard.get(i).get(j).equals("X")) {
-                    if (flag) {
-                        flag = false;
-                        if (!constraints.isEmpty()){
-                            if (count != constraints.peek()) {
-                                return false;
+                switch (cBoard.get(i).get(j)) {
+                    case "F":
+                        flag = true;
+                        count++;
+                        break;
+                    case "E":
+                        break label;
+                    case "X":
+                        if (flag) {
+                            flag = false;
+                            if (!constraints.isEmpty()) {
+                                if (count != constraints.peek()) {
+                                    return false;
+                                }
+                                constraints.remove();
                             }
-                            constraints.remove();
+                            count = 0;
                         }
-                        count = 0;
-                    }
+                        break;
                 }
             }
         }
