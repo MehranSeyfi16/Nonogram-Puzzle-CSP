@@ -58,6 +58,8 @@ public class Nonogram {
     public void updateDomain(State state){ 
         updateDomainFullRowCheck(state);
         updateDomainFullColumnCheck(state);
+        updateSingleValueRowPositions(state);
+        updateSingleValueColumnPositions(state);
     }
 
     public void updateDomainFullRowCheck(State state){
@@ -113,6 +115,57 @@ public class Nonogram {
             for (int j = 0; j < n; j++) {
                 if (board.get(i).get(goodColumns.get(j)).equals("E")) {
                     board.get(goodColumns.get(j)).set(j, "X");
+                }
+            }
+        }
+    }
+
+    public void updateSingleValueRowPositions(State state){
+        ArrayList<ArrayList<String>> board = state.getBoard();
+        for (int i = 0; i < n; i++) {
+            if (row_constraints.get(i).size() == 1){
+                if (board.get(i).get(0).equals("F")){
+                    for (int j=1; j!=Integer.parseInt(row_constraints.get(i).toString())-1; j++){
+                        board.get(i).set(j,"F");
+                    }
+                }
+                if (board.get(i).get(n-1).equals("F")){
+                    int count = 0;
+                    for (int j=n-2; count!=Integer.parseInt(row_constraints.get(i).toString())-1; j--){
+                        board.get(i).set(j,"F");
+                        count++;
+                    }
+                }
+                for (int j = 0; j < n; j++) {
+                    if (!board.get(i).get(j).equals("F")){
+                        board.get(i).set(j,"X");
+                    }
+                }
+            }
+        }
+    }
+
+    public void updateSingleValueColumnPositions(State state){
+        ArrayList<ArrayList<String>> board = state.getBoard();
+        for (int i = 0; i < n; i++) {
+            if (col_constraints.get(i).size() == 1){
+                int count = 0;
+                if (board.get(0).get(i).equals("F")){
+                    for (int j=0; count!=Integer.parseInt(col_constraints.get(i).toString())-1; j++){
+                        board.get(j).set(i,"F");
+                        count++;
+                    }
+                }
+                if (board.get(n-1).get(i).equals("F")){
+                    for (int j=n-2; count!=Integer.parseInt(col_constraints.get(i).toString())-1; j--){
+                        board.get(j).set(i,"F");
+                        count++;
+                    }
+                }
+                for (int j = 0; j < n; j++) {
+                    if (!board.get(j).get(i).equals("F")){
+                        board.get(j).set(i,"X");
+                    }
                 }
             }
         }
