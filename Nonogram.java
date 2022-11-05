@@ -222,13 +222,32 @@ public class Nonogram {
 
 
     private ArrayList<String> LCV (State state, int[] var) {
-        ArrayList<ArrayList<String>> cBoard = state.getBoard();
-        ArrayList<ArrayList<ArrayList<String>>> cDomain = state.getDomain();
+        ArrayList<String> strings = new ArrayList<>();
+        strings.add("F");
+        strings.add("X");
+        State newState = state.copy();
+        newState.setIndexBoard(var[0], var[1], "F");
+        newState.removeIndexDomain(var[0], var[1], "F");
+        updateDomain(newState);
+        ArrayList<ArrayList<ArrayList<String>>> cDomain = newState.getDomain();
+        int sum = 0;
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                sum += cDomain.get(i).get(j).size();
 
+        newState.setIndexBoard(var[0], var[1], "X");
+        newState.removeIndexDomain(var[0], var[1], "X");
+        updateDomain(newState);
+        cDomain = newState.getDomain();
+        int sum_2 = 0;
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                sum_2 += cDomain.get(i).get(j).size();
+        if (sum > sum_2)
+            strings.remove(1);
 
-
-        return state.getDomain().get(var[0]).get(var[1]);
-    } 
+        return strings;
+    }
 
     private int[] MRV (State state) {
         ArrayList<ArrayList<String>> cBoard = state.getBoard();
