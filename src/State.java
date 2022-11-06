@@ -2,15 +2,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class State {
-    
 
     private final ArrayList<ArrayList<String>> board;
     private final ArrayList<ArrayList<ArrayList<String>>> domain;
     private final int n;
 
-    public State(ArrayList<ArrayList<String>> board,
-                 ArrayList<ArrayList<ArrayList<String>>> domain) {
-
+    public State(ArrayList<ArrayList<String>> board, ArrayList<ArrayList<ArrayList<String>>> domain) {
         this.board = board;
         this.domain = domain;
         this.n = board.size();
@@ -56,6 +53,7 @@ public class State {
 
         return res;
     }
+
     private ArrayList<ArrayList<ArrayList<String>>> copyDomain(ArrayList<ArrayList<ArrayList<String>>> cDomain) {
         ArrayList<ArrayList<ArrayList<String>>> res = new ArrayList<>();
         for (int i = 0; i < n; i++) {
@@ -81,9 +79,9 @@ public class State {
         for (ArrayList<String> strings : this.getBoard()) {
             for (String s : strings) {
                 switch (s) {
-                    case "X":System.out.print("X" + "  "); break;
-                    case "F":System.out.print("F" + "  "); break;
-                    default: System.out.print("E" + "  "); break;
+                    case "X" -> System.out.print("X" + "  ");
+                    case "F" -> System.out.print("F" + "  ");
+                    default -> System.out.print("E" + "  ");
                 }
             }
             System.out.println("\n");

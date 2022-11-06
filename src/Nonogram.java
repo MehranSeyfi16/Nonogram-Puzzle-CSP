@@ -20,14 +20,14 @@ public class Nonogram {
 
     public void start() {
         long tStart = System.nanoTime();
-        backtrack(state);
-        long tEnd = System.nanoTime();
-        System.out.println("Back Track -- Total time: " + (tEnd - tStart)/1000000000.000000000);
-
-        /*long tStart = System.nanoTime();
         forwardCheck(state);
         long tEnd = System.nanoTime();
-        System.out.println("Forward Check -- Total time: " + (tEnd - tStart)/1000000000.000000000);*/
+        System.out.println("Forward Check -- Total time: " + (tEnd - tStart)/1000000000.000000000);
+
+        tStart = System.nanoTime();
+        backtrack(state);
+        tEnd = System.nanoTime();
+        System.out.println("Back Track -- Total time: " + (tEnd - tStart)/1000000000.000000000);
     }
 
     private boolean backtrack(State state) {
@@ -58,15 +58,14 @@ public class Nonogram {
     }
 
     public boolean forwardCheck(State state) {
-
         if (isFinished(state)) {
             System.out.println("Result Board: \n");
             state.printBoard();
             return true;
         }
-        if (allAssigned(state)) {
+
+        if (allAssigned(state))
             return false;
-        }
 
         int[] mrvRes = MRV(state);
         ArrayList<String> lcv = LCV(state, mrvRes);
@@ -74,145 +73,210 @@ public class Nonogram {
             State newState = state.copy();
             newState.setIndexBoard(mrvRes[0], mrvRes[1], s);
             newState.removeIndexDomain(mrvRes[0], mrvRes[1], s);
-            updateDomain(newState);
+            updateBoardAndDomain(newState, mrvRes[0], mrvRes[1], s);
 
-            if (!isConsistent(newState)) {
+            if (!isConsistent(newState) || emptyDomain(newState))
                 continue;
-            }
 
-            if (forwardCheck(newState)) {
+            if (forwardCheck(newState))
                 return true;
-            }
         }
         return false;
     }
 
-    public void updateDomain(State state) {
-        updateDomainFullRowCheck(state);
-        updateDomainFullColumnCheck(state);
-        //updateSingleValueRowPositions(state);
-        //updateSingleValueColumnPositions(state);
+    private boolean emptyDomain(State state) {
+        ArrayList<ArrayList<ArrayList<String>>> domain = state.getDomain();
+        for (int i = 0; i < domain.size(); i++)
+            for (int j = 0; j < domain.get(i).size(); j++)
+                if (domain.get(i).get(j).size() == 0 && state.getBoard().get(i).get(j).equals("E"))
+                    return true;
+        return false;
     }
 
-    public void updateDomainFullRowCheck(State state) {
+    private void updateBoardAndDomain(State state, int row, int column, String value) {
+        if (value.equals("F"))
+        {
+            updateFullRowCheck(state, row);
+            updateFullColumnCheck(state, column);
+            /*updateSingleConstraintRowCheck(state, row, column);
+            updateSingleConstraintColumnCheck(state, row, column);*/
+        }
+       /* else
+            updateUsingX(state, row, column);*/
+    }
+
+    private void updateFullRowCheck(State state, int row) {
         ArrayList<ArrayList<String>> board = state.getBoard();
         ArrayList<Integer> constraints = new ArrayList<>();
-        ArrayList<Integer> goodRows = new ArrayList<>();
         int count = 0;
-
-        for (int i = 0; i < n; i++) { //row constraints
-            for (int j = 0; j < n; j++)
-                if (board.get(i).get(j).equals("F"))
-                    count++;
-                else if (count != 0) {
-                    constraints.add(count);
-                    count = 0;
-                }
+        for (int j = 0; j < n; j++)
+            if (board.get(row).get(j).equals("F"))
+                count++;
+            else if (count != 0) {
+                constraints.add(count);
+                count = 0;
+            }
 
             if (count != 0)
                 constraints.add(count);
-            if (constraints.equals(row_constraints.get(i)))
-                goodRows.add(i);
-            constraints.clear();
-        }
 
-        for (Integer goodRow : goodRows)
-            for (int j = 0; j < n; j++)
-                if (board.get(goodRow).get(j).equals("E")) {
-                    state.setIndexBoard(goodRow, j, "X");
-                    state.removeIndexDomain(goodRow, j, "X");
-                    state.removeIndexDomain(goodRow, j, "F");
-                }
+            if (constraints.equals(row_constraints.get(row)))
+                for (int j = 0; j < n; j++)
+                    if (board.get(row).get(j).equals("E")) {
+                        state.setIndexBoard(row, j, "X");
+                        state.removeIndexDomain(row, j, "X");
+                        state.removeIndexDomain(row, j, "F");
+                    }
     }
 
-    public void updateDomainFullColumnCheck(State state) {
+    private void updateFullColumnCheck(State state, int column) {
         ArrayList<ArrayList<String>> board = state.getBoard();
         ArrayList<Integer> constraints = new ArrayList<>();
-        ArrayList<Integer> goodColumns = new ArrayList<>();
         int count = 0;
-        for (int i = 0; i < n; i++) { //column constraints
-            for (int j = 0; j < n; j++) {
-                if (board.get(j).get(i).equals("F"))
+            for (int i = 0; i < n; i++) {
+                if (board.get(i).get(column).equals("F"))
                     count++;
                 else if (count != 0) {
                     constraints.add(count);
                     count = 0;
                 }
             }
-
             if (count != 0)
                 constraints.add(count);
-            if (constraints.equals(col_constraints.get(i))) {
-                goodColumns.add(i);
-            }
-            constraints.clear();
-        }
 
-        for (Integer goodColumn : goodColumns)
-            for (int i = 0; i < n; i++)
-                if (board.get(i).get(goodColumn).equals("E")) {
-                    state.setIndexBoard(i, goodColumn, "X");
-                    state.removeIndexDomain(i, goodColumn, "X");
-                    state.removeIndexDomain(i, goodColumn, "F");
-                }
+            if (constraints.equals(col_constraints.get(column)))
+                for (int i = 0; i < n; i++)
+                    if (board.get(i).get(column).equals("E")) {
+                        state.setIndexBoard(i, column, "X");
+                        state.removeIndexDomain(i, column, "X");
+                        state.removeIndexDomain(i, column, "F");
+                    }
     }
 
-    public void updateSingleValueRowPositions(State state) {
+    private void updateSingleConstraintRowCheck(State state, int row, int column) {
         ArrayList<ArrayList<String>> board = state.getBoard();
         for (int i = 0; i < n; i++) {
             if (row_constraints.get(i).size() == 1) {
                 if (board.get(i).get(0).equals("F")) {
-//                    System.out.println(row_constraints.get(i).get(0).toString());
-                    for (int j=0; j!=Integer.parseInt(row_constraints.get(i).get(0).toString())-1; j++){
-                        state.setIndexBoard(i, j, "F");
-                        state.removeIndexDomain(i, j, "F");
+                    for (int j = 0; j != Integer.parseInt(row_constraints.get(i).get(0).toString()) - 1; j++) {
+                        if (board.get(j).get(i).equals("E"))
+                        {
+                            state.setIndexBoard(i, j, "F");
+                            state.removeIndexDomain(i, j, "F");
+                            state.removeIndexDomain(i, j, "X");
+                        }
                     }
                 }
-                if (board.get(i).get(n-1).equals("F")) {
+                if (board.get(i).get(n - 1).equals("F")) {
                     int count = 0;
-                    for (int j=n-1; count!=Integer.parseInt(row_constraints.get(i).get(0).toString())-1; j--){
-                        state.setIndexBoard(i, j, "F");
-                        state.removeIndexDomain(i, j, "F");
+                    for (int j = n - 1; count != Integer.parseInt(row_constraints.get(i).get(0).toString()) - 1; j--){
+                        if (board.get(j).get(i).equals("E"))
+                        {
+                            state.setIndexBoard(i, j, "F");
+                            state.removeIndexDomain(i, j, "F");
+                            state.removeIndexDomain(i, j, "X");
+                        }
                         count++;
                     }
                 }
                 for (int j = 0; j < n; j++) {
-                    if (!board.get(i).get(j).equals("F")) {
+                    if (board.get(j).get(i).equals("E")) {
                         state.setIndexBoard(i, j, "X");
                         state.removeIndexDomain(i, j, "X");
+                        state.removeIndexDomain(i, j, "F");
                     }
                 }
             }
         }
     }
 
-    public void updateSingleValueColumnPositions(State state) {
+    private void updateSingleConstraintColumnCheck(State state, int row, int column) {
         ArrayList<ArrayList<String>> board = state.getBoard();
         for (int i = 0; i < n; i++) {
-            if (col_constraints.get(i).size() == 1){
+            if (col_constraints.get(i).size() == 1) {
                 int count = 0;
-                if (board.get(0).get(i).equals("F")){
-                    for (int j=0; count!=Integer.parseInt(col_constraints.get(i).get(0).toString())-1; j++){
-                        state.setIndexBoard(j, i, "F");
-                        state.removeIndexDomain(j, i, "F");
+                if (board.get(0).get(i).equals("F")) {
+                    for (int j = 0; count != Integer.parseInt(col_constraints.get(i).get(0).toString()) - 1; j++) {
+                        if (board.get(i).get(j).equals("E"))
+                        {
+                            state.setIndexBoard(j, i, "F");
+                            state.removeIndexDomain(j, i, "F");
+                            state.removeIndexDomain(j, i, "X");
+                        }
                         count++;
                     }
                 }
                 if (board.get(n-1).get(i).equals("F")){
-                    for (int j=n-1; count!=Integer.parseInt(col_constraints.get(i).get(0).toString())-1; j--){
-                        state.setIndexBoard(j, i, "F");
-                        state.removeIndexDomain(j, i, "F");
+                    for (int j = n - 1; count != Integer.parseInt(col_constraints.get(i).get(0).toString()) - 1; j--){
+                        if (board.get(i).get(j).equals("E"))
+                        {
+                            state.setIndexBoard(j, i, "F");
+                            state.removeIndexDomain(j, i, "F");
+                            state.removeIndexDomain(j, i, "X");
+                        }
                         count++;
                     }
                 }
                 for (int j = 0; j < n; j++) {
-                    if (!board.get(j).get(i).equals("F")){
-                        state.setIndexBoard(j, i, "X");
-                        state.removeIndexDomain(j, i, "X");
+                    if (board.get(i).get(j).equals("E")) {
+                            state.setIndexBoard(j, i, "X");
+                            state.removeIndexDomain(j, i, "X");
+                            state.removeIndexDomain(j, i, "F");
                     }
                 }
             }
         }
+    }
+
+
+    private void updateUsingX(State state , int row, int column) {
+        ArrayList<ArrayList<String>> board = state.getBoard();
+
+        if (row < Collections.min(col_constraints.get(column)))
+            for(int j = 0; j <= row; j++)
+            {
+                if (board.get(j).get(column).equals("E")) {
+                    state.setIndexBoard(column, j, "X");
+                    state.removeIndexDomain(column, j, "X");
+                    state.removeIndexDomain(column, j, "F");
+                }
+
+            }
+
+
+        if (column < Collections.min(row_constraints.get(row)))
+            for(int i = 0; i <= column; i++)
+            {
+                if (board.get(row).get(i).equals("E")) {
+                    state.setIndexBoard(i, row, "X");
+                    state.removeIndexDomain(i, row, "X");
+                    state.removeIndexDomain(i, row, "F");
+                }
+
+            }
+
+
+        if (n - row < Collections.min(col_constraints.get(column)))
+            for(int j = n - 1; j >= row; j--)
+            {
+                if (board.get(j).get(column).equals("E")) {
+                    state.setIndexBoard(column, j, "X");
+                    state.removeIndexDomain(column, j, "X");
+                    state.removeIndexDomain(column, j, "F");
+                }
+
+            }
+
+
+        if (n - column < Collections.min(row_constraints.get(row)))
+            for(int i = n - 1; i >= column; i--)
+            {
+                if (board.get(row).get(i).equals("E")) {
+                    state.setIndexBoard(i, row, "X");
+                    state.removeIndexDomain(i, row, "X");
+                    state.removeIndexDomain(i, row, "F");
+                }
+            }
     }
 
     private ArrayList<String> LCV (State state, int[] var) {
@@ -224,36 +288,30 @@ public class Nonogram {
         newState.setIndexBoard(var[0], var[1], "F");
         newState.removeIndexDomain(var[0], var[1], "F");
         newState.removeIndexDomain(var[0], var[1], "X");
-        updateDomain(newState);
+        updateBoardAndDomain(newState, var[0], var[1], "F");
         cDomain = newState.getDomain();
         int sum = 0;
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
-                if (cDomain.get(i).get(j).size() == 0)
-                    sum += 10;                                              // could be better
-                else if (cDomain.get(i).get(j).size() == 1)                 // sum += cDomain.get(i).get(j).size()
-                    sum++;
-
-
-        newState = state.copy();
-        newState.setIndexBoard(var[0], var[1], "X");
-        newState.removeIndexDomain(var[0], var[1], "X");
+                sum += cDomain.get(i).get(j).size();                //if (cDomain.get(i).get(j).size() == 0)
+        newState = state.copy();                                    //sum += 10;
+        newState.setIndexBoard(var[0], var[1], "X");        //else if (cDomain.get(i).get(j).size() == 1)
+        newState.removeIndexDomain(var[0], var[1], "X");    //sum++;
         newState.removeIndexDomain(var[0], var[1], "F");
-        updateDomain(newState);
+        updateBoardAndDomain(newState, var[0], var[1], "X");
         cDomain = newState.getDomain();
         int sum_2 = 0;
         for (int i = 0; i < n; i++)
-            for (int j = 0; j < n; j++)
-                if (cDomain.get(i).get(j).size() == 0)              // could be better
-                    sum_2 += 10;                                    // sum_2 += cDomain.get(i).get(j).size()
-                else if (cDomain.get(i).get(j).size() == 1)
-                    sum_2++;
+            for (int j = 0; j < n; j++)                             //if (cDomain.get(i).get(j).size() == 0)
+                sum_2 += cDomain.get(i).get(j).size();              //    sum_2 += 10;                                  /could be better
+        if (sum > sum_2)                                              // else if (cDomain.get(i).get(j).size() == 1)
+            Collections.sort(strings);                                 // sum_2++;
 
-        if (sum < sum_2)
-            Collections.sort(strings);
-        //
         return strings;
     }
+
+
+
 
     private int[] MRV (State state) {
         ArrayList<ArrayList<String>> cBoard = state.getBoard();
@@ -405,3 +463,25 @@ public class Nonogram {
     }
 
 }
+
+
+
+/*if(j >= constraints.get(j))
+                        for(int k = 0; k < j; k++)
+                            if(board.get(k).get(j).equals("X"))
+                                updateUsingX(state,k,j);
+
+                    if(i >= constraints.get(j))
+                        for(int k = 0; k < i; k++)
+                            if(board.get(i).get(k).equals("X"))
+                                updateUsingX(state,i,k);
+
+                    if(n - j >= constraints.get(j))
+                        for(int k = n - j; k < n;k++)
+                            if(board.get(i).get(n-j).equals("X"))
+                                updateUsingX(state,i,n - j);
+
+                    if(n - i >= constraints.get(j))
+                        for(int k = n - i; k < n; k++)
+                            if(board.get(n - i).get(j).equals("X"))
+                                updateUsingX(state,n - i, j);*/

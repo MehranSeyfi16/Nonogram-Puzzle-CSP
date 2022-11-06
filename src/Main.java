@@ -12,7 +12,7 @@ public class Main {
     private static ArrayList<ArrayList<ArrayList<String>>> domain;
 
     public static void main(String[] args) {
-        File file = new File("E:\\University Semester\\5\\Basics and Application of Artificial Intelligence\\Projects\\Search Project\\Nonogram-Puzzle-CSP\\inputs\\input4.txt");
+        File file = new File("E:\\University Semester\\5\\Basics and Application of Artificial Intelligence\\Projects\\Search Project\\Nonogram-Puzzle-CSP\\inputs\\input5.txt");
         Scanner scanner;
 
         try {
