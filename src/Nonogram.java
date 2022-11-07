@@ -20,14 +20,53 @@ public class Nonogram {
 
     public void start() {
         long tStart = System.nanoTime();
+        //firstWork(state);
         forwardCheck(state);
         long tEnd = System.nanoTime();
         System.out.println("Forward Check -- Total time: " + (tEnd - tStart)/1000000000.000000000);
 
-        tStart = System.nanoTime();
+        /*tStart = System.nanoTime();
         backtrack(state);
         tEnd = System.nanoTime();
-        System.out.println("Back Track -- Total time: " + (tEnd - tStart)/1000000000.000000000);
+        System.out.println("Back Track -- Total time: " + (tEnd - tStart)/1000000000.000000000);*/
+    }
+
+    private void firstWork(State state) {
+        ArrayList<ArrayList<String>> board = state.getBoard();
+
+        for (int i = 0; i < row_constraints.size(); i++)
+            if (row_constraints.get(i).size() == 0)
+                for (int j = 0; j < n; j++)
+                    if (board.get(i).get(j).equals("E")) {
+                        state.setIndexBoard(j, i, "X");
+                        state.removeIndexDomain(j, i, "X");
+                        state.removeIndexDomain(j, i, "F");
+                    }
+
+            else if (row_constraints.get(i).size() == n)
+                for (int k = 0; k < n; k++)
+                    if (board.get(i).get(k).equals("E")) {
+                        state.setIndexBoard(k, i, "F");
+                        state.removeIndexDomain(k, i, "F");
+                        state.removeIndexDomain(k, i, "X");
+                    }
+
+
+        for (int i = 0; i < col_constraints.size(); i++)
+            if (col_constraints.get(i).size() == 0)
+                for (int j = 0; j < n; j++)
+                    if (board.get(j).get(i).equals("E")) {
+                        state.setIndexBoard(i, j, "X");
+                        state.removeIndexDomain(i, j, "X");
+                        state.removeIndexDomain(i, j, "F");
+                    }
+            else if (row_constraints.get(i).size() == n)
+                for (int k = 0; k < n; k++)
+                    if (board.get(i).get(k).equals("E")) {
+                        state.setIndexBoard(i, k, "F");
+                        state.removeIndexDomain(i, k, "F");
+                        state.removeIndexDomain(i, k, "X");
+                    }
     }
 
     private boolean backtrack(State state) {
@@ -36,22 +75,20 @@ public class Nonogram {
             state.printBoard();
             return true;
         }
-        if (allAssigned(state)) {
+        if (allAssigned(state))
             return false;
-        }
+
 
         int[] mrvRes = MRV(state);
         for (String s : LCV(state, mrvRes)) {
             State newState = state.copy();
             newState.setIndexBoard(mrvRes[0], mrvRes[1], s);
             newState.removeIndexDomain(mrvRes[0], mrvRes[1], s);
-            if (!isConsistent(newState)) {
+            if (!isConsistent(newState))
                 continue;
-            }
 
-            if (backtrack(newState)) {
+            if (backtrack(newState))
                 return true;
-            }
         }
 
         return false;
@@ -75,7 +112,7 @@ public class Nonogram {
             newState.removeIndexDomain(mrvRes[0], mrvRes[1], s);
             updateBoardAndDomain(newState, mrvRes[0], mrvRes[1], s);
 
-            if (!isConsistent(newState) || emptyDomain(newState))
+            if (!isConsistent(newState))
                 continue;
 
             if (forwardCheck(newState))
@@ -84,28 +121,19 @@ public class Nonogram {
         return false;
     }
 
-    private boolean emptyDomain(State state) {
-        ArrayList<ArrayList<ArrayList<String>>> domain = state.getDomain();
-        for (int i = 0; i < domain.size(); i++)
-            for (int j = 0; j < domain.get(i).size(); j++)
-                if (domain.get(i).get(j).size() == 0 && state.getBoard().get(i).get(j).equals("E"))
-                    return true;
-        return false;
-    }
-
     private void updateBoardAndDomain(State state, int row, int column, String value) {
         if (value.equals("F"))
         {
-            updateFullRowCheck(state, row);
-            updateFullColumnCheck(state, column);
+            updateFullRowConstraintsCheck(state, row);
+            updateFullColumnConstraintsCheck(state, column);
             /*updateSingleConstraintRowCheck(state, row, column);
             updateSingleConstraintColumnCheck(state, row, column);*/
         }
-       /* else
-            updateUsingX(state, row, column);*/
+       else
+           updateUsingX(state, row, column);
     }
 
-    private void updateFullRowCheck(State state, int row) {
+    private void updateFullRowConstraintsCheck(State state, int row) {
         ArrayList<ArrayList<String>> board = state.getBoard();
         ArrayList<Integer> constraints = new ArrayList<>();
         int count = 0;
@@ -129,7 +157,7 @@ public class Nonogram {
                     }
     }
 
-    private void updateFullColumnCheck(State state, int column) {
+    private void updateFullColumnConstraintsCheck(State state, int column) {
         ArrayList<ArrayList<String>> board = state.getBoard();
         ArrayList<Integer> constraints = new ArrayList<>();
         int count = 0;
@@ -219,20 +247,24 @@ public class Nonogram {
                 }
                 for (int j = 0; j < n; j++) {
                     if (board.get(i).get(j).equals("E")) {
-                            state.setIndexBoard(j, i, "X");
-                            state.removeIndexDomain(j, i, "X");
-                            state.removeIndexDomain(j, i, "F");
+                        state.setIndexBoard(j, i, "X");
+                        state.removeIndexDomain(j, i, "X");
+                        state.removeIndexDomain(j, i, "F");
                     }
                 }
             }
         }
     }
 
-
     private void updateUsingX(State state , int row, int column) {
         ArrayList<ArrayList<String>> board = state.getBoard();
+        int colMin = Collections.min(col_constraints.get(column));
+        int rowMin = Collections.min(row_constraints.get(row));
+        /*int colMax = Collections.max(col_constraints.get(column));
+        int rowMax = Collections.max(row_constraints.get(row));
+        int firstIndex, secondIndex, size, newIndex;*/
 
-        if (row < Collections.min(col_constraints.get(column)))
+        if (row < colMin)
             for(int j = 0; j <= row; j++)
             {
                 if (board.get(j).get(column).equals("E")) {
@@ -244,7 +276,7 @@ public class Nonogram {
             }
 
 
-        if (column < Collections.min(row_constraints.get(row)))
+        if (column < rowMin)
             for(int i = 0; i <= column; i++)
             {
                 if (board.get(row).get(i).equals("E")) {
@@ -256,7 +288,7 @@ public class Nonogram {
             }
 
 
-        if (n - row < Collections.min(col_constraints.get(column)))
+        if (n - row < colMin)
             for(int j = n - 1; j >= row; j--)
             {
                 if (board.get(j).get(column).equals("E")) {
@@ -268,7 +300,7 @@ public class Nonogram {
             }
 
 
-        if (n - column < Collections.min(row_constraints.get(row)))
+        if (n - column < rowMin)
             for(int i = n - 1; i >= column; i--)
             {
                 if (board.get(row).get(i).equals("E")) {
@@ -277,6 +309,67 @@ public class Nonogram {
                     state.removeIndexDomain(i, row, "F");
                 }
             }
+
+
+       /* if (row < colMax && colMax >= ((n - row) / 2) + 1)
+        {
+            if ((n - row) % 2 == 0)
+            {
+                firstIndex = row + (n - row) / 2;
+                secondIndex = row + ((n - row) / 2) + 1;
+                size = colMax - ((n - row) / 2) + 1;
+                for (int i = 0; i < size - 1; i++) {
+                    newIndex = firstIndex - i;
+                    if (board.get(newIndex).get(column).equals("E")) {
+                        state.setIndexBoard(column, newIndex, "F");
+                        state.removeIndexDomain(column, newIndex, "F");
+                        state.removeIndexDomain(column, newIndex, "X");
+                    }
+                    newIndex = secondIndex + i;
+                    if (board.get(newIndex).get(column).equals("E")) {
+                        state.setIndexBoard(column, newIndex, "F");
+                        state.removeIndexDomain(column, newIndex, "F");
+                        state.removeIndexDomain(column, newIndex, "X");
+                    }
+                }
+            }
+        }*/
+
+
+        /*if (column < rowMax)
+            for(int i = 0; i <= column; i++)
+            {
+                if (board.get(row).get(i).equals("E")) {
+                    state.setIndexBoard(i, row, "X");
+                    state.removeIndexDomain(i, row, "X");
+                    state.removeIndexDomain(i, row, "F");
+                }
+
+            }
+
+
+        if (n - row < colMax)
+            for(int j = n - 1; j >= row; j--)
+            {
+                if (board.get(j).get(column).equals("E")) {
+                    state.setIndexBoard(column, j, "X");
+                    state.removeIndexDomain(column, j, "X");
+                    state.removeIndexDomain(column, j, "F");
+                }
+
+            }
+
+
+        if (n - column < rowMax)
+            for(int i = n - 1; i >= column; i--)
+            {
+                if (board.get(row).get(i).equals("E")) {
+                    state.setIndexBoard(i, row, "X");
+                    state.removeIndexDomain(i, row, "X");
+                    state.removeIndexDomain(i, row, "F");
+                }
+            }*/
+
     }
 
     private ArrayList<String> LCV (State state, int[] var) {
@@ -309,9 +402,6 @@ public class Nonogram {
 
         return strings;
     }
-
-
-
 
     private int[] MRV (State state) {
         ArrayList<ArrayList<String>> cBoard = state.getBoard();
@@ -354,9 +444,9 @@ public class Nonogram {
         //check row constraints
         for (int i = 0; i < n; i++) {
             int sum = 0;
-            for (int x : row_constraints.get(i)) {
+            for (int x : row_constraints.get(i))
                 sum += x;
-            }
+
             int count_f = 0;
             int count_e = 0;
             int count_x = 0;
@@ -463,25 +553,3 @@ public class Nonogram {
     }
 
 }
-
-
-
-/*if(j >= constraints.get(j))
-                        for(int k = 0; k < j; k++)
-                            if(board.get(k).get(j).equals("X"))
-                                updateUsingX(state,k,j);
-
-                    if(i >= constraints.get(j))
-                        for(int k = 0; k < i; k++)
-                            if(board.get(i).get(k).equals("X"))
-                                updateUsingX(state,i,k);
-
-                    if(n - j >= constraints.get(j))
-                        for(int k = n - j; k < n;k++)
-                            if(board.get(i).get(n-j).equals("X"))
-                                updateUsingX(state,i,n - j);
-
-                    if(n - i >= constraints.get(j))
-                        for(int k = n - i; k < n; k++)
-                            if(board.get(n - i).get(j).equals("X"))
-                                updateUsingX(state,n - i, j);*/
